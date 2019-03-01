@@ -183,7 +183,7 @@ const taskDefinition = new ecs.TaskDefinition(this, 'TaskDef', {
 Images supply the software that runs inside the container. Images can be
 obtained from either DockerHub or from ECR repositories, or built directly from a local Dockerfile.
 
-* `ecs.ContainerImage.fromInternet(imageName)`: use a publicly available image from
+* `ecs.ContainerImage.fromInternet(imageName, { credentials?: MY_SECRET })`: use a public or private image from
   DockerHub or another online registry.
 * `ecs.ContainerImage.fromEcrRepository(repo, tag)`: use the given ECR repository as the image
   to start. If no tag is provided, "latest" is assumed.
