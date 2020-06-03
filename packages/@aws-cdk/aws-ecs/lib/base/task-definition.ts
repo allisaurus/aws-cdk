@@ -37,6 +37,11 @@ export interface ITaskDefinition extends IResource {
    * Return true if the task definition can be run on a Fargate cluster
    */
   readonly isFargateCompatible: boolean;
+
+  /**
+   * NetworkMode of this task definition, if not provided explicitly with concrete type
+   */
+  readonly expectedNetworkMode?: NetworkMode;
 }
 
 /**

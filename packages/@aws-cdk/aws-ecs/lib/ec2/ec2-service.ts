@@ -2,7 +2,7 @@ import * as ec2 from '@aws-cdk/aws-ec2';
 import { Construct, Lazy, Resource, Stack } from '@aws-cdk/core';
 import { BaseService, BaseServiceOptions, DeploymentControllerType, IBaseService, IService, LaunchType, PropagatedTagSource } from '../base/base-service';
 import { fromServiceAtrributes } from '../base/from-service-attributes';
-import { NetworkMode, TaskDefinition } from '../base/task-definition';
+import { ITaskDefinition, NetworkMode, TaskDefinition } from '../base/task-definition';
 import { ICluster } from '../cluster';
 import { CfnService } from '../ecs.generated';
 import { PlacementConstraint, PlacementStrategy } from '../placement';
@@ -16,7 +16,7 @@ export interface Ec2ServiceProps extends BaseServiceOptions {
    *
    * [disable-awslint:ref-via-interface]
    */
-  readonly taskDefinition: TaskDefinition;
+  readonly taskDefinition: ITaskDefinition;
 
   /**
    * Specifies whether the task's elastic network interface receives a public IP address.
@@ -212,7 +212,13 @@ export class Ec2Service extends BaseService implements IEc2Service {
       securityGroups = props.securityGroups;
     }
 
-    if (props.taskDefinition.networkMode === NetworkMode.AWS_VPC) {
+    const networkMode = props.taskDefinition instanceof TaskDefinition ? props.taskDefinition.networkMode : props.taskDefinition.expectedNetworkMode;
+
+    if (!networkMode) {
+      throw new Error('networkMode must be specified when creating an Ec2Service');
+    }
+
+    if (networkMode === NetworkMode.AWS_VPC) {
       this.configureAwsVpcNetworkingWithSecurityGroups(props.cluster.vpc, props.assignPublicIp, props.vpcSubnets, securityGroups);
     } else {
       // Either None, Bridge or Host networking. Copy SecurityGroups from ASG.
@@ -230,7 +236,7 @@ export class Ec2Service extends BaseService implements IEc2Service {
     this.addPlacementConstraints(...props.placementConstraints || []);
     this.addPlacementStrategies(...props.placementStrategies || []);
 
-    if (!this.taskDefinition.defaultContainer) {
+    if (props.taskDefinition instanceof TaskDefinition && !this.taskDefinition.defaultContainer) {
       throw new Error('A TaskDefinition must have at least one essential container');
     }
   }

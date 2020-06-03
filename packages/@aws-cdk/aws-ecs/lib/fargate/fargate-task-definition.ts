@@ -58,6 +58,7 @@ export class FargateTaskDefinition extends TaskDefinition implements IFargateTas
       public readonly compatibility = Compatibility.FARGATE;
       public readonly isEc2Compatible = false;
       public readonly isFargateCompatible = true;
+      public readonly expectedNetworkMode = NetworkMode.AWS_VPC;
     }
 
     return new Import(scope, id);

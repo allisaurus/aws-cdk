@@ -2,7 +2,7 @@ import * as ec2 from '@aws-cdk/aws-ec2';
 import * as cdk from '@aws-cdk/core';
 import { BaseService, BaseServiceOptions, DeploymentControllerType, IBaseService, IService, LaunchType, PropagatedTagSource } from '../base/base-service';
 import { fromServiceAtrributes } from '../base/from-service-attributes';
-import { TaskDefinition } from '../base/task-definition';
+import { ITaskDefinition, TaskDefinition } from '../base/task-definition';
 import { ICluster } from '../cluster';
 
 /**
@@ -14,7 +14,7 @@ export interface FargateServiceProps extends BaseServiceOptions {
    *
    * [disable-awslint:ref-via-interface]
    */
-  readonly taskDefinition: TaskDefinition;
+  readonly taskDefinition: ITaskDefinition;
 
   /**
    * Specifies whether the task's elastic network interface receives a public IP address.
@@ -164,7 +164,7 @@ export class FargateService extends BaseService implements IFargateService {
 
     this.configureAwsVpcNetworkingWithSecurityGroups(props.cluster.vpc, props.assignPublicIp, props.vpcSubnets, securityGroups);
 
-    if (!props.taskDefinition.defaultContainer) {
+    if (props.taskDefinition instanceof TaskDefinition && !props.taskDefinition.defaultContainer) {
       throw new Error('A TaskDefinition must have at least one essential container');
     }
   }

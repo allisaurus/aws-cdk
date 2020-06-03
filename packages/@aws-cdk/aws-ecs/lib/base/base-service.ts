@@ -6,7 +6,7 @@ import * as elbv2 from '@aws-cdk/aws-elasticloadbalancingv2';
 import * as iam from '@aws-cdk/aws-iam';
 import * as cloudmap from '@aws-cdk/aws-servicediscovery';
 import { Construct, Duration, IResolvable, IResource, Lazy, Resource, Stack } from '@aws-cdk/core';
-import { LoadBalancerTargetOptions, NetworkMode, TaskDefinition } from '../base/task-definition';
+import { ITaskDefinition, LoadBalancerTargetOptions, NetworkMode, TaskDefinition } from '../base/task-definition';
 import { ICluster } from '../cluster';
 import { Protocol } from '../container-definition';
 import { CfnService } from '../ecs.generated';
@@ -265,7 +265,7 @@ export interface IBaseService extends IService {
 /**
  * The base class for Ec2Service and FargateService services.
  */
-export abstract class BaseService extends Resource
+export abstract class BaseService extends Resource // base service
   implements IBaseService, elbv2.IApplicationLoadBalancerTarget, elbv2.INetworkLoadBalancerTarget, elb.ILoadBalancerTarget {
 
   /**
@@ -288,7 +288,12 @@ export abstract class BaseService extends Resource
   /**
    * The task definition to use for tasks in the service.
    */
-  public readonly taskDefinition: TaskDefinition;
+  public get taskDefinition(): TaskDefinition {
+    if (!this._taskDefinition) {
+      throw new Error('.taskDefiniiton can only be accessed if the class was constructd with an owned, not imported, task definition');
+    }
+    return this._taskDefinition;
+  }
 
   /**
    * The cluster that hosts the service.
@@ -318,6 +323,11 @@ export abstract class BaseService extends Resource
    */
   protected serviceRegistries = new Array<CfnService.ServiceRegistryProperty>();
 
+  /**
+   * The concrete task definition object to use, if provided.
+   */
+  private readonly _taskDefinition?: TaskDefinition;
+
   private readonly resource: CfnService;
   private scalableTaskCount?: ScalableTaskCount;
 
@@ -329,12 +339,16 @@ export abstract class BaseService extends Resource
     id: string,
     props: BaseServiceProps,
     additionalProps: any,
-    taskDefinition: TaskDefinition) {
+    taskDefinition: ITaskDefinition) {
     super(scope, id, {
       physicalName: props.serviceName,
     });
 
-    this.taskDefinition = taskDefinition;
+    if (taskDefinition instanceof TaskDefinition) {
+      this._taskDefinition = taskDefinition;
+    }
+
+    // this.taskDefinition = taskDefinition;
 
     this.resource = new CfnService(this, 'Service', {
       desiredCount: props.desiredCount,

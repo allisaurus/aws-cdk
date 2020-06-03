@@ -60,12 +60,17 @@ export class Ec2TaskDefinition extends TaskDefinition implements IEc2TaskDefinit
   /**
    * Imports a task definition from the specified task definition ARN.
    */
-  public static fromEc2TaskDefinitionArn(scope: Construct, id: string, ec2TaskDefinitionArn: string): IEc2TaskDefinition {
+  public static fromEc2TaskDefinitionArn(
+    scope: Construct,
+    id: string,
+    ec2TaskDefinitionArn: string,
+    expectedNetworkMode?: NetworkMode): IEc2TaskDefinition {
     class Import extends Resource implements IEc2TaskDefinition {
       public readonly taskDefinitionArn = ec2TaskDefinitionArn;
       public readonly compatibility = Compatibility.EC2;
       public readonly isEc2Compatible = true;
       public readonly isFargateCompatible = false;
+      public readonly expectedNetworkMode = expectedNetworkMode;
     }
     return new Import(scope, id);
   }
